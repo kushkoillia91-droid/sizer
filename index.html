@@ -558,6 +558,13 @@
       .hero__tips{display:none}
       h1{font-size:34px}
       .layout{padding-top:4px}
+      .stage{min-height:240px;border-radius:24px}
+      .stage__hint{top:10px;left:10px;right:118px;font-size:11px;padding:8px 10px}
+      .ring-readout{top:10px;right:10px;padding:8px 10px;border-radius:16px}
+      .ring-readout strong{font-size:16px}
+      .calibration-strip{margin-top:12px;padding:12px}
+      .calibration-target-wrap{padding:10px}
+      .calibration-target{height:46px;max-width:100%;font-size:11px}
       .mobile-slider{
         display:block;
         position:sticky;
@@ -579,6 +586,10 @@
       }
       .mobile-slider__top strong{font-size:16px}
       .desktop-size-control{display:none}
+      .two-cols,.result-grid,.print-targets{grid-template-columns:1fr}
+      .size-editor{grid-template-columns:auto 1fr auto}
+      .size-editor .btn{grid-column:1/-1}
+    }
 
       h1{font-size:40px}
       .hero__tips,.two-cols,.result-grid,.print-targets{grid-template-columns:1fr}
@@ -663,6 +674,17 @@
             <div class="calibration-strip__top">
               <strong>Калібрування банківською карткою</strong>
               <div class="value-pill" id="cardPill">85.6 мм</div>
+            </div>
+
+            <div class="mini-note">Приклади картку і піджени повзунок, щоб вона співпала по ширині</div>
+
+            <div class="calibration-target-wrap">
+              <div class="calibration-target" id="cardCalibratorVisual">BANK CARD / 85.6 MM</div>
+            </div>
+
+            <!-- 🔥 МІКРОКОРЕКЦІЯ -->
+            <input id="zoomRange" type="range" min="80" max="120" step="0.1" value="100" />
+          </div>
             </div>
             <div class="mini-note">Приклади реальну банківську картку до плашки нижче. Якщо ширина не співпадає, зміни мікрокорекцію масштабу або значення ширини.</div>
             <div class="calibration-target-wrap">
@@ -791,6 +813,12 @@
     const pixelValue = document.getElementById('pixelValue');
     const cardCalibrator = document.getElementById('cardCalibrator');
     const cardCalibratorVisual = document.getElementById('cardCalibratorVisual');
+    const zoomRange = document.getElementById('zoomRange');
+
+    zoomRange.addEventListener('input', () => {
+      const scale = zoomRange.value / 100;
+      cardCalibratorVisual.style.transform = `scale(${scale})`;
+    });
     const cardWidthInput = document.getElementById('cardWidthInput');
     const cardPill = document.getElementById('cardPill');
     const cardPillDuplicate = document.getElementById('cardPillDuplicate');
