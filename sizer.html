@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Вимірювач розміру каблучки</title>
+  <style>
+    :root{
+      --bg:#f6f3ef;
+      --surface:#ffffff;
+      --surface-2:#f4ece3;
+      --text:#241c17;
+      --muted:#7a6d61;
+      --line:#e7ddd1;
+      --brown:#2b1f18;
+      --gold:#b88c52;
+      --gold-dark:#916a37;
+      --shadow:0 18px 40px rgba(36,28,23,.08);
+      --shadow-soft:0 10px 24px rgba(36,28,23,.06);
+      --ok:#2f8a57;
+      --warn:#ad6c17;
+    }
+
+    body.dark{
+      --bg:#161311;
+      --surface:#211c18;
+      --surface-2:#2a231e;
+      --text:#f4ede5;
+      --muted:#c7b7a8;
+      --line:#3b312a;
+      --brown:#f3e4d2;
+      --gold:#d5a665;
+      --gold-dark:#efc88f;
+      --shadow:0 18px 40px rgba(0,0,0,.28);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.2);
+      --ok:#7fd4a1;
+      --warn:#f0be62;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,Arial,sans-serif;
+      background:linear-gradient(180deg,#faf7f3 0%, var(--bg) 100%);
+      color:var(--text);
+      line-height:1.5;
+      transition:background .2s ease,color .2s ease;
+    }
+    button,input{font:inherit}
+    .container{width:min(1200px,calc(100% - 24px));margin:0 auto}
+
+    .header{
+      position:sticky;
+      top:0;
+      z-index:30;
+      background:color-mix(in srgb, var(--bg) 88%, white 12%);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--line);
+    }
+    .header__row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+      padding:14px 0;
+      flex-wrap:wrap;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .brand__mark{
+      width:44px;
+      height:44px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(180deg,#f1d8b1 0%,#c5904b 100%);
+      color:#fff;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
+    }
+    .brand strong{display:block;font-size:18px}
+    .brand span{display:block;color:var(--muted);font-size:13px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:11px 16px;
+      cursor:pointer;
+      transition:.2s ease;
+      font-weight:700;
+      color:var(--text);
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn--gold{background:var(--gold);color:#fff}
+    .btn--ghost{background:var(--surface);border:1px solid var(--line);color:var(--brown)}
+
+    .hero{padding:22px 0 12px}
+    .hero__box{
+      background:linear-gradient(180deg,color-mix(in srgb, var(--surface) 80%, white 20%) 0%, var(--surface-2) 100%);
+      border:1px solid var(--line);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+      padding:24px;
+    }
+    .hero__grid{
+      display:grid;
+      grid-template-columns:1fr 420px;
+      gap:18px;
+      align-items:start;
+    }
+    .eyebrow{
+      color:var(--gold-dark);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      font-size:12px;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+    h1{
+      margin:0;
+      font-size:52px;
+      line-height:.96;
+      letter-spacing:-.03em;
+    }
+    .hero p{
+      margin:14px 0 0;
+      color:var(--muted);
+      font-size:18px;
+      max-width:720px;
+    }
+    .hero__tips{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+    }
+    .tip{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:14px;
+    }
+    .tip strong{display:block;font-size:16px;margin-bottom:4px}
+    .tip span{font-size:13px;color:var(--muted)}
+    .hero__side{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:18px;
+      box-shadow:var(--shadow-soft);
+    }
+    .hero__side h2{margin:0 0 10px;font-size:24px;line-height:1.05}
+    .hero__side p{margin:0;color:var(--muted);font-size:14px}
+    .legend{display:grid;gap:8px;margin-top:14px}
+    .legend__item{display:flex;align-items:center;gap:10px;font-size:14px}
+    .swatch{width:18px;height:18px;border-radius:50%}
+    .swatch--ring{border:4px solid rgba(184,140,82,.95);background:transparent}
+    .swatch--guide{background:#cfc4b7}
+    .swatch--card{background:#f0dbc0;border:1px solid #d8b789}
+
+    .layout{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:18px;
+      padding:14px 0 26px;
+      align-items:start;
+    }
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+    .panel h2{margin:0 0 8px;font-size:30px;line-height:1.05}
+    .panel p{margin:0;color:var(--muted)}
+
+    .stage{
+      margin-top:18px;
+      background:linear-gradient(180deg,color-mix(in srgb, var(--surface) 92%, white 8%) 0%, var(--surface-2) 100%);
+      border:1px solid var(--line);
+      border-radius:30px;
+      min-height:520px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
+    }
+    .stage__grid{
+      position:absolute;
+      inset:0;
+      background-image:
+        linear-gradient(to right, rgba(43,31,24,.045) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(43,31,24,.045) 1px, transparent 1px);
+      background-size:24px 24px;
+      pointer-events:none;
+    }
+    .stage__center-x,
+    .stage__center-y{
+      position:absolute;
+      background:rgba(43,31,24,.1);
+      pointer-events:none;
+    }
+    .stage__center-x{left:50%;top:0;bottom:0;width:1px;transform:translateX(-.5px)}
+    .stage__center-y{top:50%;left:0;right:0;height:1px;transform:translateY(-.5px)}
+    .stage__hint{
+      position:absolute;
+      top:16px;
+      left:16px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:color-mix(in srgb, var(--surface) 94%, white 6%);
+      border:1px solid var(--line);
+      color:var(--brown);
+      font-size:13px;
+      box-shadow:var(--shadow-soft);
+      z-index:4;
+    }
+    .stage__safe{
+      position:absolute;
+      inset:24px;
+      border:1px dashed rgba(43,31,24,.14);
+      border-radius:22px;
+      pointer-events:none;
+    }
+    .ring-overlay{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      width:120px;
+      height:120px;
+      border-radius:50%;
+      border:12px solid rgba(184,140,82,.94);
+      background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.02) 55%, transparent 70%);
+      box-shadow:
+        inset 0 0 14px rgba(255,255,255,.55),
+        0 20px 38px rgba(184,140,82,.16),
+        0 0 0 2px rgba(255,255,255,.55);
+      pointer-events:none;
+      z-index:3;
+    }
+    .ring-overlay::after{
+      content:'';
+      position:absolute;
+      inset:50%;
+      transform:translate(-50%,-50%);
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      background:rgba(43,31,24,.45);
+    }
+    .ring-readout{
+      position:absolute;
+      right:16px;
+      top:16px;
+      padding:10px 14px;
+      border-radius:18px;
+      background:color-mix(in srgb, var(--surface) 94%, white 6%);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+      z-index:4;
+      text-align:right;
+    }
+    .ring-readout span{display:block;font-size:12px;color:var(--muted)}
+    .ring-readout strong{font-size:18px;line-height:1.1}
+    .card-calibrator{
+      position:absolute;
+      left:28px;
+      bottom:28px;
+      height:54px;
+      width:260px;
+      border-radius:14px;
+      background:linear-gradient(90deg,#f1ddc1 0%,#dbb07a 100%);
+      border:1px solid #d4b081;
+      box-shadow:0 10px 24px rgba(0,0,0,.08);
+      display:grid;
+      place-items:center;
+      color:#6b4621;
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.06em;
+    }
+    .card-calibrator::before{content:'BANK CARD / 85.6 MM'}
+
+    .controls{display:grid;gap:14px;margin-top:18px}
+    .control{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:14px;
+    }
+    .control__top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .control__top strong{font-size:16px}
+    .value-pill{
+      padding:8px 12px;
+      border-radius:999px;
+      background:var(--surface-2);
+      font-weight:800;
+      color:var(--brown);
+      font-size:14px;
+    }
+    input[type="range"]{width:100%}
+    .two-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .field{display:grid;gap:8px}
+    .field label{font-size:14px;font-weight:700;color:var(--brown)}
+    .field input{
+      width:100%;
+      height:46px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--surface);
+      color:var(--text);
+      padding:0 14px;
+    }
+    .field small{color:var(--muted);font-size:12px}
+
+    .size-editor{
+      display:grid;
+      grid-template-columns:auto 1fr auto auto;
+      gap:10px;
+      align-items:center;
+      margin-top:12px;
+    }
+    .stepper{
+      width:44px;
+      height:44px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--surface);
+      color:var(--brown);
+      font-size:22px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .size-input{
+      height:46px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:var(--surface);
+      color:var(--text);
+      padding:0 14px;
+      width:100%;
+    }
+    .mini-note{font-size:12px;color:var(--muted);margin-top:8px}
+
+    .result-box{
+      margin-top:18px;
+      background:linear-gradient(180deg,color-mix(in srgb, var(--surface) 86%, white 14%) 0%, var(--surface-2) 100%);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:18px;
+      display:grid;
+      gap:12px;
+    }
+    .result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .result-card{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+    }
+    .result-card span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+    .result-card strong{font-size:22px;line-height:1.1}
+    .status{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      padding:10px 14px;
+      font-size:13px;
+      font-weight:700;
+      width:max-content;
+    }
+    .status--ok{background:rgba(47,138,87,.12);color:var(--ok)}
+    .status--warn{background:rgba(173,108,23,.12);color:var(--warn)}
+
+    .print-box{
+      margin-top:18px;
+      padding:16px;
+      border-radius:22px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      display:grid;
+      gap:12px;
+    }
+    .print-targets{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:10px;
+    }
+    .print-circle{
+      aspect-ratio:1;
+      border-radius:50%;
+      border:2px solid #000;
+      display:grid;
+      place-items:center;
+      font-size:12px;
+      color:#000;
+      background:#fff;
+    }
+
+    .steps{display:grid;gap:12px;margin-top:18px}
+    .step{
+      display:grid;
+      grid-template-columns:34px 1fr;
+      gap:12px;
+      align-items:start;
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:14px;
+    }
+    .step__num{
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(180deg,#f4e1c2 0%,#cc9a52 100%);
+      color:#fff;
+      font-weight:800;
+    }
+    .step strong{display:block;margin-bottom:4px}
+    .step span{color:var(--muted);font-size:14px}
+
+    .focus-mode .header,
+    .focus-mode .hero,
+    .focus-mode .panel:last-child,
+    .focus-mode .footer-note{display:none}
+    .focus-mode .layout{grid-template-columns:1fr}
+    .focus-mode .panel:first-child{padding:12px;background:transparent;border:none;box-shadow:none}
+    .focus-mode .stage{min-height:calc(100vh - 40px)}
+
+    .fullscreen-note{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .footer-note{
+      margin:14px 0 30px;
+      padding:14px 18px;
+      border-radius:20px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:14px;
+      box-shadow:var(--shadow-soft);
+    }
+
+    @media print{
+      .header,.hero,.controls,.result-box,.steps,.footer-note,.panel p,.ring-readout,.stage__hint,.stage__grid,.stage__center-x,.stage__center-y,.stage__safe,.card-calibrator{display:none !important}
+      body{background:#fff;color:#000}
+      .container,.layout,.panel{width:100%;max-width:none;margin:0;padding:0;border:none;box-shadow:none;background:#fff}
+      .layout{display:block}
+      .stage{display:none}
+      .print-box{display:block;border:none;padding:0}
+    }
+
+    @media (max-width:1100px){
+      .hero__grid,.layout{grid-template-columns:1fr}
+      .hero__tips,.result-grid{grid-template-columns:repeat(2,1fr)}
+      .print-targets{grid-template-columns:repeat(3,1fr)}
+    }
+    @media (max-width:760px){
+      h1{font-size:40px}
+      .hero__tips,.two-cols,.result-grid,.print-targets{grid-template-columns:1fr}
+      .card-calibrator{left:16px;right:16px;width:auto;bottom:16px}
+      .stage{min-height:440px}
+      .size-editor{grid-template-columns:auto 1fr auto}
+      .size-editor .btn{grid-column:1/-1}
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header__row">
+      <div class="brand">
+        <div class="brand__mark">OR</div>
+        <div>
+          <strong>Вимірювач каблучки</strong>
+          <span>Окрема точна сторінка без сайту</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn--ghost" id="themeBtn" type="button">Темний режим</button>
+        <button class="btn btn--ghost" id="unitBtn" type="button">Одиниці: UA</button>
+        <button class="btn btn--ghost" id="focusBtn" type="button">Режим фокусу</button>
+        <button class="btn btn--ghost" id="fullscreenBtn" type="button">На весь екран</button>
+        <button class="btn btn--ghost" id="printBtn" type="button">Друк 100%</button>
+        <button class="btn btn--ghost" id="resetBtn" type="button">Скинути</button>
+        <button class="btn btn--gold" id="fitBtn" type="button">Підігнати по центру</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero__box">
+          <div class="hero__grid">
+            <div>
+              <div class="eyebrow">Точне визначення розміру</div>
+              <h1>Онлайн вимірювач розміру каблучки</h1>
+              <p>Поклади свою каблучку прямо на екран, відкалібруй масштаб по банківській картці й піджени віртуальне кільце так, щоб воно точно співпало з внутрішнім контуром справжньої каблучки.</p>
+
+              <div class="hero__tips">
+                <div class="tip"><strong>1. Калібруй</strong><span>Приклади банківську картку до нижньої плашки та звір ширину.</span></div>
+                <div class="tip"><strong>2. Поклади каблучку</strong><span>Поклади каблучку прямо на екран по центру поля.</span></div>
+                <div class="tip"><strong>3. Піджени коло</strong><span>Рухай повзунок, поки віртуальне кільце не сяде точно всередину.</span></div>
+              </div>
+            </div>
+
+            <aside class="hero__side">
+              <h2>Що тут є</h2>
+              <p>Окрема чиста сторінка без каталогу, тільки інструмент вимірювання.</p>
+              <div class="legend">
+                <div class="legend__item"><span class="swatch swatch--ring"></span> Віртуальне кільце для підгонки</div>
+                <div class="legend__item"><span class="swatch swatch--guide"></span> Центральні направляючі</div>
+                <div class="legend__item"><span class="swatch swatch--card"></span> Калібратор під банківську картку 85.6 мм</div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container layout">
+        <div class="panel">
+          <h2>Поле для підгонки</h2>
+          <p>Працюй прямо тут: приклади каблучку до екрана і піджени розмір до повного співпадіння по внутрішньому краю.</p>
+
+          <div class="stage" id="stage">
+            <div class="stage__grid"></div>
+            <div class="stage__center-x"></div>
+            <div class="stage__center-y"></div>
+            <div class="stage__safe"></div>
+            <div class="stage__hint">Поклади каблучку на центр екрана</div>
+            <div class="ring-readout"><span>Поточний розмір</span><strong id="stageReadout">17</strong></div>
+            <div class="ring-overlay" id="ringOverlay"></div>
+            <div class="card-calibrator" id="cardCalibrator"></div>
+          </div>
+
+          <div class="result-box">
+            <div class="result-grid">
+              <div class="result-card">
+                <span>Розмір каблучки</span>
+                <strong id="sizeValue">17</strong>
+              </div>
+              <div class="result-card">
+                <span>Внутрішній діаметр</span>
+                <strong id="diameterValue">17.0 мм</strong>
+              </div>
+              <div class="result-card">
+                <span>Піксельний діаметр</span>
+                <strong id="pixelValue">0 px</strong>
+              </div>
+            </div>
+            <div class="fullscreen-note" id="unitNote">Зараз показується український розмір каблучки.</div>
+            <div id="calibrationStatus" class="status status--warn">Масштаб ще не відкалібрований точно</div>
+          </div>
+
+          <div class="print-box">
+            <strong>Шаблон для друку 100%</strong>
+            <div class="mini-note">Під час друку обери масштаб 100% або «Фактичний розмір». Потім приклади каблучку до кола, яке співпадає з внутрішнім краєм.</div>
+            <div class="print-targets" id="printTargets"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Керування</h2>
+          <p>Тут усе, що потрібно для точної підгонки.</p>
+
+          <div class="controls">
+            <div class="control">
+              <div class="control__top">
+                <strong>Розмір каблучки</strong>
+                <div class="value-pill" id="sizePill">17</div>
+              </div>
+              <input id="ringRange" type="range" min="14" max="24" step="0.1" value="17" />
+              <div class="size-editor">
+                <button class="stepper" id="minusBtn" type="button">−</button>
+                <input class="size-input" id="sizeInput" type="number" min="14" max="24" step="0.1" value="17" />
+                <button class="stepper" id="plusBtn" type="button">+</button>
+                <button class="btn btn--ghost" id="applySizeBtn" type="button">Застосувати</button>
+              </div>
+              <div class="mini-note">Для дуже точного підбору використовуй крок 0.1.</div>
+            </div>
+
+            <div class="control">
+              <div class="control__top">
+                <strong>Калібрування екрана</strong>
+                <div class="value-pill" id="cardPill">85.6 мм</div>
+              </div>
+              <div class="two-cols">
+                <div class="field">
+                  <label for="cardWidthInput">Реальна ширина картки</label>
+                  <input id="cardWidthInput" type="number" min="40" max="120" step="0.1" value="85.6" />
+                  <small>Стандарт банківської картки — 85.6 мм</small>
+                </div>
+                <div class="field">
+                  <label for="zoomRange">Мікрокорекція масштабу</label>
+                  <input id="zoomRange" type="range" min="80" max="120" step="0.1" value="100" />
+                  <small>Для дуже точної ручної доводки під твій екран</small>
+                </div>
+              </div>
+              <div class="actions" style="margin-top:12px">
+                <button class="btn btn--gold" id="calibrateBtn" type="button">Оновити калібрування</button>
+                <button class="btn btn--ghost" id="fullGuideBtn" type="button">Показати інструкцію</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="steps" id="guideBlock">
+            <div class="step">
+              <div class="step__num">1</div>
+              <div><strong>Постав яскравість вище</strong><span>Так буде легше бачити контур каблучки на екрані.</span></div>
+            </div>
+            <div class="step">
+              <div class="step__num">2</div>
+              <div><strong>Звір плашку-калібратор</strong><span>Приклади банківську картку до нижньої плашки. Якщо вона ширша або вужча, натисни «Оновити калібрування».</span></div>
+            </div>
+            <div class="step">
+              <div class="step__num">3</div>
+              <div><strong>Поклади каблучку на екран</strong><span>Розмісти її по центру так, щоб внутрішній отвір був добре видимий.</span></div>
+            </div>
+            <div class="step">
+              <div class="step__num">4</div>
+              <div><strong>Піджени віртуальне коло</strong><span>Рухай повзунок або кнопки +/−, поки золоте коло не співпаде саме з внутрішнім краєм справжньої каблучки.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="footer-note">Для найкращої точності вимірюй на комп’ютері або планшеті без масштабування сторінки в браузері. Масштаб браузера має бути 100%.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ringRange = document.getElementById('ringRange');
+    const unitBtn = document.getElementById('unitBtn');
+    const focusBtn = document.getElementById('focusBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const unitNote = document.getElementById('unitNote');
+    const ringOverlay = document.getElementById('ringOverlay');
+    const sizeValue = document.getElementById('sizeValue');
+    const sizePill = document.getElementById('sizePill');
+    const sizeInput = document.getElementById('sizeInput');
+    const diameterValue = document.getElementById('diameterValue');
+    const pixelValue = document.getElementById('pixelValue');
+    const cardCalibrator = document.getElementById('cardCalibrator');
+    const cardWidthInput = document.getElementById('cardWidthInput');
+    const cardPill = document.getElementById('cardPill');
+    const zoomRange = document.getElementById('zoomRange');
+    const calibrationStatus = document.getElementById('calibrationStatus');
+    const stageReadout = document.getElementById('stageReadout');
+    const printTargets = document.getElementById('printTargets');
+    const themeBtn = document.getElementById('themeBtn');
+
+    let pxPerMm = 3.04;
+    let userZoomFactor = 1;
+    let unitMode = 'ua';
+
+    function clamp(val, min, max){
+      return Math.min(max, Math.max(min, val));
+    }
+
+    function mmToPx(mm){
+      return mm * pxPerMm * userZoomFactor;
+    }
+
+    function setSize(size){
+      const clamped = clamp(Number(size) || 17, 14, 24);
+      const normalized = Math.round(clamped * 10) / 10;
+      ringRange.value = normalized.toFixed(1);
+      sizeInput.value = normalized.toFixed(1);
+      updateRing();
+    }
+
+    function formatSizeForMode(size){
+      if(unitMode === 'ua') return size.toFixed(1).replace('.0','');
+      return (size * Math.PI).toFixed(1) + ' мм';
+    }
+
+    function labelForMode(){
+      return unitMode === 'ua' ? 'Зараз показується український розмір каблучки.' : 'Зараз показується внутрішня окружність у мм.';
+    }
+
+    function updateRing(){
+      const size = parseFloat(ringRange.value);
+      const px = mmToPx(size);
+      ringOverlay.style.width = px + 'px';
+      ringOverlay.style.height = px + 'px';
+      ringOverlay.style.borderWidth = Math.max(8, Math.min(14, px * 0.085)) + 'px';
+
+      const pretty = formatSizeForMode(size);
+      sizeValue.textContent = pretty;
+      sizePill.textContent = pretty;
+      sizeInput.value = size.toFixed(1);
+      stageReadout.textContent = pretty;
+      diameterValue.textContent = size.toFixed(1) + ' мм';
+      pixelValue.textContent = Math.round(px) + ' px';
+      unitNote.textContent = labelForMode();
+    }
+
+    function calibrate(){
+      const mm = parseFloat(cardWidthInput.value) || 85.6;
+      const px = cardCalibrator.offsetWidth;
+      pxPerMm = px / mm;
+      cardPill.textContent = mm.toFixed(1) + ' мм';
+      updateRing();
+
+      const delta = Math.abs(mm - 85.6);
+      calibrationStatus.className = 'status ' + (delta <= 0.2 ? 'status--ok' : 'status--warn');
+      calibrationStatus.textContent = delta <= 0.2
+        ? 'Калібрування виглядає точним'
+        : 'Перевір ширину картки ще раз для максимальної точності';
+    }
+
+    function applyZoom(){
+      userZoomFactor = parseFloat(zoomRange.value) / 100;
+      updateRing();
+    }
+
+    function resetAll(){
+      ringRange.value = '17';
+      sizeInput.value = '17.0';
+      cardWidthInput.value = '85.6';
+      zoomRange.value = '100';
+      userZoomFactor = 1;
+      calibrate();
+    }
+
+    function toggleTheme(){
+      document.body.classList.toggle('dark');
+      themeBtn.textContent = document.body.classList.contains('dark') ? 'Світлий режим' : 'Темний режим';
+    }
+
+    function toggleUnitMode(){
+      unitMode = unitMode === 'ua' ? 'circumference' : 'ua';
+      unitBtn.textContent = unitMode === 'ua' ? 'Одиниці: UA' : 'Одиниці: мм';
+      updateRing();
+    }
+
+    function toggleFocusMode(){
+      document.body.classList.toggle('focus-mode');
+      focusBtn.textContent = document.body.classList.contains('focus-mode') ? 'Звичайний режим' : 'Режим фокусу';
+    }
+
+    async function toggleFullscreen(){
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    }
+
+    function renderPrintTargets(){
+      const sizes = [15, 16, 17, 18, 19, 20, 21, 22];
+      printTargets.innerHTML = sizes.map(size => `
+        <div class="print-circle" style="width:${size}mm;height:${size}mm">${size}</div>
+      `).join('');
+    }
+
+    document.getElementById('calibrateBtn').addEventListener('click', calibrate);
+    document.getElementById('resetBtn').addEventListener('click', resetAll);
+    document.getElementById('fitBtn').addEventListener('click', () => {
+      document.getElementById('stage').scrollIntoView({behavior:'smooth', block:'center'});
+    });
+    document.getElementById('fullGuideBtn').addEventListener('click', () => {
+      document.getElementById('guideBlock').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+    themeBtn.addEventListener('click', toggleTheme);
+    unitBtn.addEventListener('click', toggleUnitMode);
+    focusBtn.addEventListener('click', toggleFocusMode);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+    document.getElementById('minusBtn').addEventListener('click', () => setSize(parseFloat(ringRange.value) - 0.1));
+    document.getElementById('plusBtn').addEventListener('click', () => setSize(parseFloat(ringRange.value) + 0.1));
+    document.getElementById('applySizeBtn').addEventListener('click', () => setSize(sizeInput.value));
+
+    ringRange.addEventListener('input', updateRing);
+    zoomRange.addEventListener('input', applyZoom);
+    cardWidthInput.addEventListener('change', calibrate);
+    sizeInput.addEventListener('change', () => setSize(sizeInput.value));
+    window.addEventListener('resize', calibrate);
+
+    renderPrintTargets();
+    calibrate();
+    updateRing();
+  </script>
+</body>
+</html>
