@@ -278,7 +278,7 @@
       background:linear-gradient(90deg,#f1ddc1 0%,#dbb07a 100%);
       border:1px solid #d4b081;
       box-shadow:0 10px 24px rgba(0,0,0,.08);
-      display:grid;
+      display:none;
       place-items:center;
       color:#6b4621;
       font-size:12px;
@@ -286,6 +286,44 @@
       letter-spacing:.06em;
     }
     .card-calibrator::before{content:'BANK CARD / 85.6 MM'}
+
+    .calibration-strip{
+      margin-top:18px;
+      padding:16px;
+      border-radius:22px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      display:grid;
+      gap:12px;
+    }
+    .calibration-strip__top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .calibration-target-wrap{
+      padding:14px;
+      border-radius:18px;
+      background:linear-gradient(180deg,color-mix(in srgb, var(--surface) 92%, white 8%) 0%, var(--surface-2) 100%);
+      border:1px solid var(--line);
+    }
+    .calibration-target{
+      height:56px;
+      width:100%;
+      max-width:420px;
+      border-radius:14px;
+      background:linear-gradient(90deg,#f1ddc1 0%,#dbb07a 100%);
+      border:1px solid #d4b081;
+      display:grid;
+      place-items:center;
+      color:#6b4621;
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.06em;
+      margin:0 auto;
+    }
 
     .controls{display:grid;gap:14px;margin-top:18px}
     .control{
@@ -514,6 +552,12 @@
       .print-targets{grid-template-columns:repeat(3,1fr)}
     }
     @media (max-width:760px){
+      .hero{padding:8px 0 4px}
+      .hero__box{padding:16px}
+      .hero__side{display:none}
+      .hero__tips{display:none}
+      h1{font-size:34px}
+      .layout{padding-top:4px}
       .mobile-slider{
         display:block;
         position:sticky;
@@ -609,10 +653,21 @@
             <div class="stage__center-x"></div>
             <div class="stage__center-y"></div>
             <div class="stage__safe"></div>
-            <div class="stage__hint">Поклади каблучку на центр екрана</div>
+            <div class="stage__hint">Поклади каблучку на екран і, за потреби, перетягни віртуальне кільце мишкою</div>
             <div class="ring-readout"><span>Поточний розмір</span><strong id="stageReadout">17</strong></div>
             <div class="ring-overlay" id="ringOverlay"></div>
             <div class="card-calibrator" id="cardCalibrator"></div>
+          </div>
+
+          <div class="calibration-strip">
+            <div class="calibration-strip__top">
+              <strong>Калібрування банківською карткою</strong>
+              <div class="value-pill" id="cardPill">85.6 мм</div>
+            </div>
+            <div class="mini-note">Приклади реальну банківську картку до плашки нижче. Якщо ширина не співпадає, зміни мікрокорекцію масштабу або значення ширини.</div>
+            <div class="calibration-target-wrap">
+              <div class="calibration-target" id="cardCalibratorVisual">BANK CARD / 85.6 MM</div>
+            </div>
           </div>
 
           <div class="mobile-slider">
@@ -672,7 +727,7 @@
             <div class="control">
               <div class="control__top">
                 <strong>Калібрування екрана</strong>
-                <div class="value-pill" id="cardPill">85.6 мм</div>
+                <div class="value-pill" id="cardPillDuplicate">85.6 мм</div>
               </div>
               <div class="two-cols">
                 <div class="field">
@@ -735,8 +790,10 @@
     const diameterValue = document.getElementById('diameterValue');
     const pixelValue = document.getElementById('pixelValue');
     const cardCalibrator = document.getElementById('cardCalibrator');
+    const cardCalibratorVisual = document.getElementById('cardCalibratorVisual');
     const cardWidthInput = document.getElementById('cardWidthInput');
     const cardPill = document.getElementById('cardPill');
+    const cardPillDuplicate = document.getElementById('cardPillDuplicate');
     const zoomRange = document.getElementById('zoomRange');
     const calibrationStatus = document.getElementById('calibrationStatus');
     const stageReadout = document.getElementById('stageReadout');
@@ -798,9 +855,10 @@
 
     function calibrate(){
       const mm = parseFloat(cardWidthInput.value) || 85.6;
-      const px = cardCalibrator.offsetWidth;
+      const px = cardCalibratorVisual.offsetWidth;
       pxPerMm = px / mm;
       cardPill.textContent = mm.toFixed(1) + ' мм';
+      cardPillDuplicate.textContent = mm.toFixed(1) + ' мм';
       updateRing();
 
       const delta = Math.abs(mm - 85.6);
