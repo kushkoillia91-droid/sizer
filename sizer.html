@@ -311,7 +311,46 @@
       color:var(--brown);
       font-size:14px;
     }
-    input[type="range"]{width:100%}
+    input[type="range"]{
+      width:100%;
+      appearance:none;
+      -webkit-appearance:none;
+      background:transparent;
+      height:38px;
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height:8px;
+      border-radius:999px;
+      background:linear-gradient(90deg,#ead7bc 0%,#c99654 100%);
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:#fff;
+      border:3px solid var(--gold);
+      box-shadow:0 6px 16px rgba(0,0,0,.18);
+      margin-top:-10px;
+    }
+    input[type="range"]::-moz-range-track{
+      height:8px;
+      border-radius:999px;
+      background:linear-gradient(90deg,#ead7bc 0%,#c99654 100%);
+    }
+    input[type="range"]::-moz-range-thumb{
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:#fff;
+      border:3px solid var(--gold);
+      box-shadow:0 6px 16px rgba(0,0,0,.18);
+    }
+
+    .mobile-slider{
+      display:none;
+    }
     .two-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .field{display:grid;gap:8px}
     .field label{font-size:14px;font-weight:700;color:var(--brown)}
@@ -475,6 +514,28 @@
       .print-targets{grid-template-columns:repeat(3,1fr)}
     }
     @media (max-width:760px){
+      .mobile-slider{
+        display:block;
+        position:sticky;
+        bottom:10px;
+        z-index:50;
+        margin:12px 0 0;
+        padding:14px;
+        border-radius:22px;
+        background:color-mix(in srgb, var(--surface) 92%, white 8%);
+        border:1px solid var(--line);
+        box-shadow:0 16px 30px rgba(0,0,0,.12);
+      }
+      .mobile-slider__top{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        margin-bottom:8px;
+      }
+      .mobile-slider__top strong{font-size:16px}
+      .desktop-size-control{display:none}
+
       h1{font-size:40px}
       .hero__tips,.two-cols,.result-grid,.print-targets{grid-template-columns:1fr}
       .card-calibrator{left:16px;right:16px;width:auto;bottom:16px}
@@ -554,6 +615,14 @@
             <div class="card-calibrator" id="cardCalibrator"></div>
           </div>
 
+          <div class="mobile-slider">
+            <div class="mobile-slider__top">
+              <strong>Повзунок розміру</strong>
+              <div class="value-pill" id="mobileSizePill">17</div>
+            </div>
+            <input id="mobileRingRange" type="range" min="14" max="24" step="0.1" value="17" />
+          </div>
+
           <div class="result-box">
             <div class="result-grid">
               <div class="result-card">
@@ -585,7 +654,7 @@
           <p>Тут усе, що потрібно для точної підгонки.</p>
 
           <div class="controls">
-            <div class="control">
+            <div class="control desktop-size-control">
               <div class="control__top">
                 <strong>Розмір каблучки</strong>
                 <div class="value-pill" id="sizePill">17</div>
@@ -661,6 +730,8 @@
     const sizeValue = document.getElementById('sizeValue');
     const sizePill = document.getElementById('sizePill');
     const sizeInput = document.getElementById('sizeInput');
+    const mobileRingRange = document.getElementById('mobileRingRange');
+    const mobileSizePill = document.getElementById('mobileSizePill');
     const diameterValue = document.getElementById('diameterValue');
     const pixelValue = document.getElementById('pixelValue');
     const cardCalibrator = document.getElementById('cardCalibrator');
@@ -693,6 +764,7 @@
       const clamped = clamp(Number(size) || 17, 14, 24);
       const normalized = Math.round(clamped * 10) / 10;
       ringRange.value = normalized.toFixed(1);
+      mobileRingRange.value = normalized.toFixed(1);
       sizeInput.value = normalized.toFixed(1);
       updateRing();
     }
@@ -716,6 +788,7 @@
       const pretty = formatSizeForMode(size);
       sizeValue.textContent = pretty;
       sizePill.textContent = pretty;
+      mobileSizePill.textContent = pretty;
       sizeInput.value = size.toFixed(1);
       stageReadout.textContent = pretty;
       diameterValue.textContent = size.toFixed(1) + ' мм';
@@ -800,7 +873,8 @@
     document.getElementById('plusBtn').addEventListener('click', () => setSize(parseFloat(ringRange.value) + 0.1));
     document.getElementById('applySizeBtn').addEventListener('click', () => setSize(sizeInput.value));
 
-    ringRange.addEventListener('input', updateRing);
+    ringRange.addEventListener('input', () => setSize(ringRange.value));
+    mobileRingRange.addEventListener('input', () => setSize(mobileRingRange.value));
     zoomRange.addEventListener('input', applyZoom);
     cardWidthInput.addEventListener('change', calibrate);
     sizeInput.addEventListener('change', () => setSize(sizeInput.value));
