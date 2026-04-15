@@ -676,6 +676,11 @@
     let userZoomFactor = 1;
     let unitMode = 'ua';
 
+    // dragging state
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
     function clamp(val, min, max){
       return Math.min(max, Math.max(min, val));
     }
@@ -800,6 +805,72 @@
     cardWidthInput.addEventListener('change', calibrate);
     sizeInput.addEventListener('change', () => setSize(sizeInput.value));
     window.addEventListener('resize', calibrate);
+
+    // DRAG FUNCTIONALITY
+    ringOverlay.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      ringOverlay.classList.add('dragging');
+
+      const rect = ringOverlay.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+
+      const stageRect = stage.getBoundingClientRect();
+      let x = e.clientX - stageRect.left - offsetX;
+      let y = e.clientY - stageRect.top - offsetY;
+
+      // bounds
+      const maxX = stage.clientWidth - ringOverlay.offsetWidth;
+      const maxY = stage.clientHeight - ringOverlay.offsetHeight;
+
+      x = Math.max(0, Math.min(x, maxX));
+      y = Math.max(0, Math.min(y, maxY));
+
+      ringOverlay.style.left = x + 'px';
+      ringOverlay.style.top = y + 'px';
+      ringOverlay.style.transform = 'none';
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      ringOverlay.classList.remove('dragging');
+    });
+
+    // touch support
+    ringOverlay.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      const touch = e.touches[0];
+      const rect = ringOverlay.getBoundingClientRect();
+      offsetX = touch.clientX - rect.left;
+      offsetY = touch.clientY - rect.top;
+    });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      const touch = e.touches[0];
+      const stageRect = stage.getBoundingClientRect();
+
+      let x = touch.clientX - stageRect.left - offsetX;
+      let y = touch.clientY - stageRect.top - offsetY;
+
+      const maxX = stage.clientWidth - ringOverlay.offsetWidth;
+      const maxY = stage.clientHeight - ringOverlay.offsetHeight;
+
+      x = Math.max(0, Math.min(x, maxX));
+      y = Math.max(0, Math.min(y, maxY));
+
+      ringOverlay.style.left = x + 'px';
+      ringOverlay.style.top = y + 'px';
+      ringOverlay.style.transform = 'none';
+    });
+
+    document.addEventListener('touchend', () => {
+      isDragging = false;
+    });
 
     renderPrintTargets();
     calibrate();
